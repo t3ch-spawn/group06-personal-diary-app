@@ -720,23 +720,18 @@ class DiaryMainInterface:
         """Creates quick action buttons panel"""
         actions_frame = ttk.LabelFrame(parent, text="⚡ Quick Actions", padding="10")
         actions_frame.pack(fill=tk.X, pady=(0, 15))
-        
-        # Button grid
+
         buttons_info = [
-            ("💾 Save Entry", self._save_current_entry),
-            ("🔍 Search", self._show_search_dialog),
-            ("🗑️ Delete", self._delete_current_entry),
-            ("🔄 Clear", self._clear_current_entry),
-            ("📅 Today", self._go_to_today),
-           ("📊 Stats", self._show_statistics),
-            ("📋 View Entries", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
-
-
-
-            ("📊 Stats", self._show_statistics)
-
-  
-        ]
+    ("💾 Save Entry", self._save_current_entry),
+    ("🔍 Search", self._show_search_dialog),
+    ("🗑️ Delete", self._delete_current_entry),
+    ("🔄 Clear", self._clear_current_entry),
+    ("📅 Today", self._go_to_today),
+    ("📊 Stats", self._show_statistics),
+    ("📋 View Entries", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry)),
+]
+        
+    
         
         for i, (text, command) in enumerate(buttons_info):
             btn = ttk.Button(actions_frame, text=text, command=command, width=15)
