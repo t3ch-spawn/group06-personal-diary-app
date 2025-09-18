@@ -732,7 +732,7 @@ class DiaryMainInterface:
             ("📋 View Entries", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
 
 
-=======
+
             ("📊 Stats", self._show_statistics)
 
   
