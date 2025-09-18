@@ -304,6 +304,129 @@ class CalendarWidget:
         """Packs the calendar frame"""
         self.frame.pack(**kwargs)
 
+        
+        
+
+
+class EntriesViewer:
+    """Window to display all diary entries in list format (robust and clickable)"""
+
+    def __init__(self, parent, entries: Dict[str, MockDiaryEntry], open_callback=None):
+        self.parent = parent
+        self.entries = entries  # expected to be dict keyed by "YYYY-MM-DD"
+        self.open_callback = open_callback
+        self.ascending = True
+        self.id_map = {}  # map tree iid -> date_key
+
+        # Create viewer window
+        self.window = tk.Toplevel(parent)
+        self.window.title("📋 All Diary Entries")
+        self.window.geometry("640x420")
+        self.window.transient(parent)
+        self.window.grab_set()
+
+        # Main frame
+        main_frame = ttk.Frame(self.window, padding="10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Treeview for entries
+        self.tree = ttk.Treeview(
+            main_frame,
+            columns=("Date", "Time", "Title"),
+            show="headings",
+            height=14
+        )
+
+        self.tree.heading("Date", text="Date")
+        self.tree.heading("Time", text="Time")
+        self.tree.heading("Title", text="Title")
+
+        self.tree.column("Date", width=110, anchor=tk.CENTER)
+        self.tree.column("Time", width=100, anchor=tk.CENTER)
+        self.tree.column("Title", width=380, anchor=tk.W)
+
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Bind double click AFTER tree is created
+        self.tree.bind("<Double-1>", self._open_selected_entry)
+
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Buttons frame
+        btn_frame = ttk.Frame(self.window)
+        btn_frame.pack(fill=tk.X, pady=8)
+
+        open_btn = ttk.Button(btn_frame, text="Open Selected", command=self._open_selected_entry)
+        open_btn.pack(side=tk.LEFT, padx=6)
+
+        toggle_btn = ttk.Button(btn_frame, text="⇅ Toggle Order", command=self.toggle_order)
+        toggle_btn.pack(side=tk.LEFT, padx=6)
+
+        close_btn = ttk.Button(btn_frame, text="Close", command=self.window.destroy)
+        close_btn.pack(side=tk.RIGHT, padx=6)
+
+        # Load entries initially
+        self.load_entries()
+
+    def load_entries(self):
+        """Load entries into the treeview with stable iids and an id_map"""
+        # clear previous
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+        self.id_map.clear()
+
+        # Build sorted list of entries (entries is a dict of date_key -> MockDiaryEntry)
+        sorted_entries = sorted(
+            self.entries.values(),
+            key=lambda e: datetime.strptime(e.created_at, "%Y-%m-%d %H:%M:%S"),
+            reverse=not self.ascending
+        )
+
+        # Insert with sequential iids and store mapping to date_key
+        for idx, entry in enumerate(sorted_entries):
+            dt = datetime.strptime(entry.created_at, "%Y-%m-%d %H:%M:%S")
+            iid = str(idx)
+            self.id_map[iid] = entry.date  # date_key (YYYY-MM-DD)
+            self.tree.insert(
+                "",
+                tk.END,
+                iid=iid,
+                values=(dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M:%S"), entry.title or "Untitled")
+            )
+
+    def toggle_order(self):
+        self.ascending = not self.ascending
+        self.load_entries()
+
+    def _open_selected_entry(self, event=None):
+        """Open the selected diary entry using the provided callback (if any)"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showinfo("Selection", "Please select an entry to open!")
+            return
+
+        iid = selection[0]
+        date_key = self.id_map.get(iid)
+        if not date_key:
+            messagebox.showerror("Error", "Could not resolve selected entry.")
+            return
+
+        # If the caller provided an open_callback, call it with a date object
+        if self.open_callback:
+            try:
+                parsed_date = datetime.strptime(date_key, "%Y-%m-%d").date()
+                self.open_callback(parsed_date)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to open entry: {e}")
+        else:
+            messagebox.showinfo("Info", "No open callback provided by the application.")
+        self.window.destroy()
+
+
+
 
 class SearchDialog:
     """Search dialog for finding diary entries"""
@@ -605,7 +728,14 @@ class DiaryMainInterface:
             ("🗑️ Delete", self._delete_current_entry),
             ("🔄 Clear", self._clear_current_entry),
             ("📅 Today", self._go_to_today),
+           ("📊 Stats", self._show_statistics),
+            ("📋 View Entries", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
+
+
+=======
             ("📊 Stats", self._show_statistics)
+
+  
         ]
         
         for i, (text, command) in enumerate(buttons_info):
