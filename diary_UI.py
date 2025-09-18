@@ -303,8 +303,11 @@ class CalendarWidget:
     def pack(self, **kwargs):
         """Packs the calendar frame"""
         self.frame.pack(**kwargs)
+
         
         
+
+
 class EntriesViewer:
     """Window to display all diary entries in list format (robust and clickable)"""
 
@@ -421,7 +424,6 @@ class EntriesViewer:
         else:
             messagebox.showinfo("Info", "No open callback provided by the application.")
         self.window.destroy()
-
 
 
 
@@ -726,10 +728,14 @@ class DiaryMainInterface:
             ("🗑️ Delete", self._delete_current_entry),
             ("🔄 Clear", self._clear_current_entry),
             ("📅 Today", self._go_to_today),
-            ("📊 Stats", self._show_statistics),
+           ("📊 Stats", self._show_statistics),
             ("📋 View Entries", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
 
 
+=======
+            ("📊 Stats", self._show_statistics)
+
+  
         ]
         
         for i, (text, command) in enumerate(buttons_info):
