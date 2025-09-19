@@ -1,8 +1,7 @@
 import re
 
 
-entries = {
-  "entries": [
+entries =  [
     {
       "id": 1,
       "date": "12-08-2025",
@@ -74,7 +73,7 @@ entries = {
       "content": "Prepared slides for tomorrow’s presentation."
     }
   ]
-}
+
 
 # This is a custom exception to throw errors when there is no search result for either a date or a content
 class No_Result_Error(Exception):
@@ -93,7 +92,7 @@ class Diary():
        
 
   # This function takes the data from the user and creates an entry in a dictionary structure
-    def to_dict(self):
+    def create_entry(self):
         return {
             "id": self.id,
             "date": self.date,
@@ -101,6 +100,26 @@ class Diary():
             "content": self.content,
             "user": self.user
         }
+    
+    def edit_entry(self, entry_id, new_entry=None):
+     
+       for entry in entries:
+           if entry["id"] == entry_id:
+               entry.update(new_entry)
+       
+       print(entries)
+       return entries
+                    
+                
+  
+
+    def delete_entry(self, entry_id):
+      
+        for entry in entries:
+            if entry["id"] == entry_id:
+                entries.remove(entry)
+                   
+   
 
   # This function searches through the available entries for a particular date string, if found, it returns all entries with the date string, if no date is found, it raises a "No Result" error
     def search_by_date(self, date):
@@ -108,7 +127,7 @@ class Diary():
             results = []
 
             # Loop through the entries array, for each entry if the date matches the date of that particular entry, add that entry to the results list
-            for entry in entries["entries"]:
+            for entry in entries:
                 if(entry["date"] == date):
                     results.append(entry)
 
@@ -127,7 +146,7 @@ class Diary():
           results = []
 
           # Loop through the entries array, for each entry if the pattern matches some part of the content of that particular entry, add that entry to the results list
-          for entry in entries["entries"]:
+          for entry in entries:
               if pattern.search(entry["content"]):
                   results.append(entry)
 
@@ -139,6 +158,3 @@ class Diary():
           
       except No_Result_Error as e:
             return e
-
-
-print('')
