@@ -10,33 +10,35 @@ class No_Result_Error(Exception):
         super().__init__(self.message)
 
 
-diaryStore = DiaryStorage()   
+
 class Diary():
     def __init__(self, id = None, date = None, time = None, content = None):
         self.id = id
         self.date = date
-        self.time = time
+        # self.time = time
         self.content = content
        
 
   # This function takes the data from the user and creates an entry in a dictionary structure
     def create_entry(self, entry):
+        diaryStore = DiaryStorage()   
         entries = diaryStore.list_entries()
         entry_id =  entries[-1]["id"] + 1 if len(entries) > 0 else 1
         entries.append({
             "id": entry_id,
             "date": entry["date"],
-            "time": entry["time"],
+            # "time": entry["time"],
             "content": entry["content"],
             "title": entry["title"]
         })
         diaryStore.save_entries(entries)
 
   # This function takes in the id of the entry to be edited, finds and edits it and updates the json file
-    def edit_entry(self, entry_id, new_entry=None):
+    def edit_entry(self, entry_date, new_entry=None):
+       diaryStore = DiaryStorage()   
        entries = diaryStore.list_entries()
        for entry in entries:
-           if entry["id"] == entry_id:
+           if entry["date"] == entry_date:
                entry.update(new_entry)
        
        diaryStore.save_entries(entries)
@@ -44,10 +46,11 @@ class Diary():
                     
                 
 # This function takes in the id of the entry to be deleted, finds it and removes it from the json file
-    def delete_entry(self, entry_id):
+    def delete_entry(self, entry_date):
+        diaryStore = DiaryStorage()   
         entries = diaryStore.list_entries()
         for entry in entries:
-            if entry["id"] == entry_id:
+            if entry["date"] == entry_date:
                 entries.remove(entry)
         diaryStore.save_entries(entries)
                    
@@ -55,6 +58,7 @@ class Diary():
 
   # This function searches through the available entries for a particular date string, if found, it returns all entries with the date string, if no date is found, it raises a "No Result" error
     def search_by_date(self, date):
+        diaryStore = DiaryStorage()   
         entries = diaryStore.list_entries()
         try:
             results = []
@@ -73,6 +77,7 @@ class Diary():
 
   # This function searches for content of an entry through a keyword(which is the user input), using regex
     def search_by_keyword(self, keyword):
+      diaryStore = DiaryStorage()   
       entries = diaryStore.list_entries()
       try: 
           # Create a regex pattern by passing in the keyword and ignoring uppercase typography
@@ -98,12 +103,12 @@ class Diary():
 diary1 = Diary()
 
 # diary1.delete_entry(2)
-diary1.create_entry(  {
-        "date": "25-06-2025",
-        "time": "11:00",
-        "content": "Worked for noth stronger.",
-        "title": "MY day in the life",
-    })
+# diary1.create_entry(  {
+#         "date": "25-06-2025",
+#         "time": "11:00",
+#         "content": "Worked for noth stronger.",
+#         "title": "MY day in the life",
+#     })
 
 
 # currEntries = diaryStore.list_entries()

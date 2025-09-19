@@ -3,6 +3,9 @@ from tkinter import ttk, messagebox, simpledialog
 import calendar
 from datetime import datetime, date
 from typing import Dict, Optional, List
+from diary import Diary
+from storage import DiaryStorage
+
 
 
 class DiaryExceptions:
@@ -310,8 +313,10 @@ class CalendarWidget:
 
 class EntriesViewer:
     """Window to display all diary entries in list format (robust and clickable)"""
+    
 
     def __init__(self, parent, entries: Dict[str, MockDiaryEntry], open_callback=None):
+      
         self.parent = parent
         self.entries = entries  # expected to be dict keyed by "YYYY-MM-DD"
         self.open_callback = open_callback
@@ -591,6 +596,8 @@ class SearchDialog:
 class DiaryMainInterface:
     """Main diary application interface"""
     
+   
+
     def __init__(self):
         # Initialize main window
         self.root = tk.Tk()
@@ -602,7 +609,7 @@ class DiaryMainInterface:
         self.current_date = None
         self.is_modified = False
         self.is_saving = False  # Flag to prevent concurrent operations
-        self.mock_entries = {}  # Mock data storage for frontend demo
+        self.mock_entries = {}   # Mock data storage for frontend demo
         self.action_buttons = {}  # Initialize action_buttons dictionary
         
         # Configure styles
@@ -714,11 +721,16 @@ class DiaryMainInterface:
         """Creates quick action buttons panel"""
         actions_frame = ttk.LabelFrame(parent, text="⚡ Quick Actions", padding="10")
         actions_frame.pack(fill=tk.X, pady=(0, 15))
-
+        diaryStore = DiaryStorage()
+        entries_list = diaryStore.list_entries()
+        entries_edited = {
+            "entries": entries_list
+        }
+        print(self.mock_entries)
         buttons = [
     ("💾 Save", self._save_current_entry),
     ("🔍 Search", self._show_search_dialog),
-    ("✏️ Edit", self._edit_current_entry),
+    # ("✏️ Edit", self._edit_current_entry),
     ("🗑️ Delete", self._delete_current_entry),
     ("📅 Today", self._go_to_today),
     ("📋 View All", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
@@ -960,7 +972,7 @@ class DiaryMainInterface:
                 return
         
         # Save to mock storage
-        date_key = self.current_date.strftime("%Y-%m-%d")
+        date_key = self.current_date.strftime("%d-%m-%Y")
         self.mock_entries[date_key] = MockDiaryEntry(date_key, content, title)
         
         try:
@@ -973,10 +985,34 @@ class DiaryMainInterface:
             self._update_button_states(is_new_entry=False)
             
             messagebox.showinfo("Save Successful", f"Entry saved for {formatted_date}!")
+
+            diaryFns = Diary()
+            diaryStore = DiaryStorage()
+            entries_list = diaryStore.list_entries()
+
+
+            entryDict = {
+                "title": title,
+                "content": content,
+                "date": date_key,
+            }
+            print(self.mock_entries)
+
+            for entry in entries_list:
+                if(entry["date"] == date_key):
+                    diaryFns.edit_entry(date_key, entryDict)
+                    return
+
+            diaryFns.create_entry(entryDict)
+
         finally:
             self.is_saving = False  # Reset saving flag
     
     def _delete_current_entry(self):
+
+        diary1 = Diary()
+
+        
         """Deletes the current diary entry"""
         try:
             if not self.current_date:
@@ -1009,6 +1045,7 @@ class DiaryMainInterface:
                     
                     # Update button states after successful deletion
                     self._update_button_states(is_new_entry=True)
+                    diary1.delete_entry(date_key)
                 except Exception as e:
                     # Restore the entry if deletion fails
                     self.mock_entries[date_key] = temp_entry
