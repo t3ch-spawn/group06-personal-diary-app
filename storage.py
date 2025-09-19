@@ -1,89 +1,50 @@
-
-import os, json, base64
+# storage.py
+import json
+import os
 from datetime import datetime
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.fernet import Fernet
 
-class SecureDiary:
-    def __init__(self, password: str, filename="diary.json.enc"):
+class DiaryStorage:
+    def __init__(self, filename="diary.json"):
         self.filename = filename
-        self.password = password.encode()
-        self.saltfile = "salt.bin"
-        self.key = self._derive_key()
+        self.data = {"entries": []}
+        self.load_entries()
 
-    def _derive_key(self):
-        if os.path.exists(self.saltfile):
-            salt = open(self.saltfile, "rb").read()
+    # Save entries to JSON file
+    def save_entries(self):
+        with open(self.filename, "w") as f:
+            json.dump(self.data, f, indent=4)
+
+    # Load entries from JSON file
+    def load_entries(self):
+        if os.path.exists(self.filename):
+            with open(self.filename, "r") as f:
+                self.data = json.load(f)
         else:
-            salt = os.urandom(16)
-            open(self.saltfile, "wb").write(salt)
+            self.data = {"entries": []}
 
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=390000,
-            backend=default_backend()
-        )
-        return Fernet(base64.urlsafe_b64encode(kdf.derive(self.password)))
-
-    def _load_entries(self):
-        if not os.path.exists(self.filename):
-            return []
-        try:
-            encrypted = open(self.filename, "rb").read()
-            data = self.key.decrypt(encrypted)
-            return json.loads(data.decode())
-        except Exception:
-            print("❌ Wrong password or corrupted file.")
-            return []
-
-    def _save_entries(self, entries):
-        data = json.dumps(entries, indent=2).encode()
-        encrypted = self.key.encrypt(data)
-        open(self.filename, "wb").write(encrypted)
-
+    # Add new entry
     def add_entry(self, title, content):
-        entries = self._load_entries()
-        entry_id = len(entries) + 1
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        entries.append({
+        entry_id = len(self.data["entries"]) + 1
+        now = datetime.now()
+        entry = {
             "id": entry_id,
             "title": title,
             "content": content,
-            "datetime": timestamp
-        })
-        self._save_entries(entries)
-        print("✅ Entry added securely!")
+            "date": now.strftime("%Y-%m-%d"),
+            "time": now.strftime("%H:%M:%S")
+        }
+        self.data["entries"].append(entry)
+        self.save_entries()
 
+    # View all entries
+    def view_entries(self):
+        return self.data["entries"]
+
+    # listing entries 
     def list_entries(self):
-        entries = self._load_entries()
-        if not entries:
-            print("No entries found.")
-            return
-        for e in entries:
-            print(f"[{e['id']}] {e['title']} ({e['datetime']})")
-            print(f"   {e['content'][:40]}...\n")
-
-    def update_entry(self, entry_id, new_title=None, new_content=None):
-        entries = self._load_entries()
-        for e in entries:
-            if e["id"] == entry_id:
-                if new_title: e["title"] = new_title
-                if new_content: e["content"] = new_content
-                e["datetime"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self._save_entries(entries)
-                print("✅ Entry updated!")
-                return
-        print("❌ Entry not found.")
-
-    def delete_entry(self, entry_id):
-        entries = self._load_entries()
-        new_entries = [e for e in entries if e["id"] != entry_id]
-        if len(new_entries) == len(entries):
-            print("❌ Entry not found.")
+        if not self.data["entries"]:
+            print("No entries yet.")
         else:
-            self._save_entries(new_entries)
-            print("✅ Entry deleted!")
+            for e in self.data["entries"]:
+                print(f"{e['id']}. {e['title']} - {e['date']} {e['time']}")
+                print(f"   {e['content']}")
