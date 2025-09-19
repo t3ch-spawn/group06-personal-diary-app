@@ -140,3 +140,5 @@ class Diary():
       except No_Result_Error as e:
             return e
 
+
+print('')
