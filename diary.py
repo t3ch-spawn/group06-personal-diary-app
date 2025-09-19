@@ -145,9 +145,9 @@ class Diary():
           pattern = re.compile(re.escape(keyword), re.IGNORECASE)
           results = []
 
-          # Loop through the entries array, for each entry if the pattern matches some part of the content of that particular entry, add that entry to the results list
+          # Loop through the entries array, for each entry if the pattern matches some part of the content or title of that particular entry, add that entry to the results list
           for entry in entries:
-              if pattern.search(entry["content"]):
+              if pattern.search(entry["content"]) or pattern.search(entry["title"]):
                   results.append(entry)
 
           # If the results list length is equal to 0, that means there is no search result, then raise an error
