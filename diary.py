@@ -1,4 +1,5 @@
 import re
+from storage import SecureDiary
 
 
 entries =  [
@@ -92,13 +93,12 @@ class Diary():
        
 
   # This function takes the data from the user and creates an entry in a dictionary structure
-    def create_entry(self):
+    def create_entry(self, entry):
         return {
             "id": self.id,
             "date": self.date,
             "time": self.time,
             "content": self.content,
-            "user": self.user
         }
     
     def edit_entry(self, entry_id, new_entry=None):
