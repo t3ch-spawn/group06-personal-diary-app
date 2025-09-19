@@ -76,6 +76,7 @@ entries = {
   ]
 }
 
+# This is a custom exception to throw errors when there is no search result for either a date or a content
 class No_Result_Error(Exception):
     def __init__(self, result_type = None, content = None):
         self.message = f"There are no search results for {result_type}: {content}"
@@ -84,41 +85,58 @@ class No_Result_Error(Exception):
 
     
 class Diary():
-    def __init__(self):
-        pass
+    def __init__(self, id = None, date = None, time = None, content = None):
+        self.id = id
+        self.date = date
+        self.time = time
+        self.content = content
+       
 
+  # This function takes the data from the user and creates an entry in a dictionary structure
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "date": self.date,
+            "time": self.time,
+            "content": self.content,
+            "user": self.user
+        }
+
+  # This function searches through the available entries for a particular date string, if found, it returns all entries with the date string, if no date is found, it raises a "No Result" error
     def search_by_date(self, date):
         try:
             results = []
+
+            # Loop through the entries array, for each entry if the date matches the date of that particular entry, add that entry to the results list
             for entry in entries["entries"]:
                 if(entry["date"] == date):
                     results.append(entry)
 
-        
+            # If the results list length is equal to 0, that means there is no search result, then raise an error
             if(results.__len__() == 0):
                raise No_Result_Error("date", date)
             return results
         except No_Result_Error as e:
-            print(e)
+            return e
 
-    def search_by_keyword(text, keyword):
-      pattern = re.compile(rf"\b{re.escape(keyword)}\b", re.IGNORECASE)
-      matches = pattern.findall(text)
-      return matches
+  # This function searches for content of an entry through a keyword(which is the user input), using regex
+    def search_by_keyword(self, keyword):
+      try: 
+          # Create a regex pattern by passing in the keyword and ignoring uppercase typography
+          pattern = re.compile(re.escape(keyword), re.IGNORECASE)
+          results = []
 
+          # Loop through the entries array, for each entry if the pattern matches some part of the content of that particular entry, add that entry to the results list
+          for entry in entries["entries"]:
+              if pattern.search(entry["content"]):
+                  results.append(entry)
 
-
-
-# # Example usage
-# text = "The quick brown fox jumps over the lazy dog."
-# keyword = "fox"
-# matches = search_by_keyword(text, keyword)
-
-# if matches:
-#     print(f"Found '{keyword}' in the text.")
-# else:
-#     print(f"'{keyword}' not found in the text.")
-
-
-
+          # If the results list length is equal to 0, that means there is no search result, then raise an error
+          if(results.__len__() == 0):
+               raise No_Result_Error("content", keyword)
+          print(results)
+          return results
+          
+      except No_Result_Error as e:
+            return e
 
