@@ -31,7 +31,8 @@ class Diary():
             "title": entry["title"]
         })
         diaryStore.save_entries(entries)
-    
+
+  # This function takes in the id of the entry to be edited, finds and edits it and updates the json file
     def edit_entry(self, entry_id, new_entry=None):
        entries = diaryStore.list_entries()
        for entry in entries:
@@ -42,8 +43,7 @@ class Diary():
        return entries
                     
                 
-  
-
+# This function takes in the id of the entry to be deleted, finds it and removes it from the json file
     def delete_entry(self, entry_id):
         entries = diaryStore.list_entries()
         for entry in entries:

@@ -9,7 +9,7 @@ class DiaryStorage:
         self.entries = []
         self.load_entries()
 
-    # Save entries to JSON file
+    # Saves entries to JSON file
     def save_entries(self, entries):
         with open(self.filename, "w") as f:
             json.dump(entries, f, indent=4)
@@ -22,7 +22,7 @@ class DiaryStorage:
         else:
             self.entries = []
 
-    # Listing entries
+    # Listing entries: It returns an array of the entries in the json file
     def list_entries(self):
         if not self.entries:
             return []
