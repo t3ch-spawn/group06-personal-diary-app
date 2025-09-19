@@ -1,79 +1,6 @@
 import re
-from storage import SecureDiary
+from storage import DiaryStorage
 
-
-entries =  [
-    {
-      "id": 1,
-      "date": "12-08-2025",
-      "time": "09:15",
-      "title": "Morning Coding Session",
-      "content": "Had a productive morning coding the diary project."
-    },
-    {
-      "id": 2,
-      "date": "16-09-2025",
-      "time": "20:10",
-      "title": "Evening Tennis",
-      "content": "Played tennis in the evening, felt great!"
-    },
-    {
-      "id": 3,
-      "date": "03-07-2025",
-      "time": "14:45",
-      "title": "Library Research",
-      "content": "Went to the library to research project ideas."
-    },
-    {
-      "id": 4,
-      "date": "01-09-2025",
-      "time": "18:30",
-      "title": "Movie Night",
-      "content": "Watched a movie with friends after class."
-    },
-    {
-      "id": 5,
-      "date": "25-06-2025",
-      "time": "11:00",
-      "title": "Gym Workout",
-      "content": "Worked out at the gym, feeling stronger."
-    },
-    {
-      "id": 6,
-      "date": "05-08-2025",
-      "time": "21:20",
-      "title": "Team Call",
-      "content": "Had a long call with my project teammates."
-    },
-    {
-      "id": 7,
-      "date": "10-09-2025",
-      "time": "08:05",
-      "title": "Morning Walk",
-      "content": "Early morning walk to clear my head."
-    },
-    {
-      "id": 8,
-      "date": "22-07-2025",
-      "time": "16:40",
-      "title": "Debugging Session",
-      "content": "Spent the afternoon debugging Python code."
-    },
-    {
-      "id": 9,
-      "date": "22-07-2025",
-      "time": "13:25",
-      "title": "Family Lunch",
-      "content": "Visited family and had lunch together."
-    },
-    {
-      "id": 10,
-      "date": "14-09-2025",
-      "time": "19:55",
-      "title": "Presentation Prep",
-      "content": "Prepared slides for tomorrow’s presentation."
-    }
-  ]
 
 
 # This is a custom exception to throw errors when there is no search result for either a date or a content
@@ -83,7 +10,7 @@ class No_Result_Error(Exception):
         super().__init__(self.message)
 
 
-    
+diaryStore = DiaryStorage()   
 class Diary():
     def __init__(self, id = None, date = None, time = None, content = None):
         self.id = id
@@ -94,35 +21,41 @@ class Diary():
 
   # This function takes the data from the user and creates an entry in a dictionary structure
     def create_entry(self, entry):
-        return {
-            "id": self.id,
-            "date": self.date,
-            "time": self.time,
-            "content": self.content,
-        }
+        entries = diaryStore.list_entries()
+        entry_id =  entries[-1]["id"] + 1 if len(entries) > 0 else 1
+        entries.append({
+            "id": entry_id,
+            "date": entry["date"],
+            "time": entry["time"],
+            "content": entry["content"],
+            "title": entry["title"]
+        })
+        diaryStore.save_entries(entries)
     
     def edit_entry(self, entry_id, new_entry=None):
-     
+       entries = diaryStore.list_entries()
        for entry in entries:
            if entry["id"] == entry_id:
                entry.update(new_entry)
        
-       print(entries)
+       diaryStore.save_entries(entries)
        return entries
                     
                 
   
 
     def delete_entry(self, entry_id):
-      
+        entries = diaryStore.list_entries()
         for entry in entries:
             if entry["id"] == entry_id:
                 entries.remove(entry)
+        diaryStore.save_entries(entries)
                    
    
 
   # This function searches through the available entries for a particular date string, if found, it returns all entries with the date string, if no date is found, it raises a "No Result" error
     def search_by_date(self, date):
+        entries = diaryStore.list_entries()
         try:
             results = []
 
@@ -140,6 +73,7 @@ class Diary():
 
   # This function searches for content of an entry through a keyword(which is the user input), using regex
     def search_by_keyword(self, keyword):
+      entries = diaryStore.list_entries()
       try: 
           # Create a regex pattern by passing in the keyword and ignoring uppercase typography
           pattern = re.compile(re.escape(keyword), re.IGNORECASE)
@@ -158,3 +92,19 @@ class Diary():
           
       except No_Result_Error as e:
             return e
+
+
+
+diary1 = Diary()
+
+# diary1.delete_entry(2)
+diary1.create_entry(  {
+        "date": "25-06-2025",
+        "time": "11:00",
+        "content": "Worked for noth stronger.",
+        "title": "MY day in the life",
+    })
+
+
+# currEntries = diaryStore.list_entries()
+# print(currEntries)
