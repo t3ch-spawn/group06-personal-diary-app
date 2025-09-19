@@ -1,4 +1,4 @@
-                                                                                                                                                                                                                                                                                                                                                                                      entries = {
+entries = {
   "entries": [
     {
       "id": 1,
@@ -74,13 +74,12 @@
 }
 
 class No_Result_Error(Exception):
-    def __init__(self, result_type = None, content = None):
+    def __init__(self, result_type=None, content=None):
         self.message = f"There are no search results for {result_type}: {content}"
         super().__init__(self.message)
 
 
-    
-class Diary():
+class Diary:
     def __init__(self):
         pass
 
@@ -88,14 +87,40 @@ class Diary():
         try:
             results = []
             for entry in entries["entries"]:
-                if(entry["date"] == date):
+                if entry["date"] == date:
                     results.append(entry)
 
-        
-            if(results.__len__() == 0):
-               raise No_Result_Error("date", date)
+            if len(results) == 0:
+                raise No_Result_Error("date", date)
             return results
         except No_Result_Error as e:
             print(e)
+
+    def edit_entry(self, entry_id, new_title=None, new_content=None):
+        try:
+            for entry in entries["entries"]:
+                if entry["id"] == entry_id:
+                    if new_title:
+                        entry["title"] = new_title
+                    if new_content:
+                        entry["content"] = new_content
+                    print("✅ Entry updated successfully.")
+                    return entry
+
+            raise No_Result_Error("id", entry_id)
+        except No_Result_Error as e:
+            print(e)
+
+    def delete_entry(self, entry_id):
+        try:
+            for entry in entries["entries"]:
+                if entry["id"] == entry_id:
+                    entries["entries"].remove(entry)
+                    print("🗑️ Entry deleted successfully.")
+                    return
+            raise No_Result_Error("id", entry_id)
+        except No_Result_Error as e:
+            print(e)
+
 
 
