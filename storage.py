@@ -6,7 +6,7 @@ from datetime import datetime
 class DiaryStorage:
     def __init__(self, filename="diary.json"):
         self.filename = filename
-        self.entries = []
+        self.entries = {}
         self.load_entries()
 
     # Saves entries to JSON file
@@ -20,11 +20,11 @@ class DiaryStorage:
             with open(self.filename, "r") as f:
                 self.entries = json.load(f)
         else:
-            self.entries = []
+            self.entries = {}
 
     # Listing entries: It returns an array of the entries in the json file
     def list_entries(self):
         if not self.entries:
-            return []
+            return {}
         else:
             return self.entries

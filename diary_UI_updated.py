@@ -1,11 +1,11 @@
+
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import calendar
 from datetime import datetime, date
 from typing import Dict, Optional, List
-from diary import Diary
 from storage import DiaryStorage
-
+from diary import Diary
 
 
 class DiaryExceptions:
@@ -103,9 +103,9 @@ class LoginDialog:
         login_btn.pack(side=tk.LEFT, padx=(0, 10))
         
         # Create new diary button
-        new_btn = ttk.Button(button_frame, text="Create New Diary", 
-                            command=self._handle_new_diary)
-        new_btn.pack(side=tk.LEFT)
+        # new_btn = ttk.Button(button_frame, text="Create New Diary", 
+        #                     command=self._handle_new_diary)
+        # new_btn.pack(side=tk.LEFT)
         
         # Cancel button
         cancel_btn = ttk.Button(button_frame, text="Cancel", 
@@ -313,15 +313,15 @@ class CalendarWidget:
 
 class EntriesViewer:
     """Window to display all diary entries in list format (robust and clickable)"""
-    
 
-    def __init__(self, parent, entries: Dict[str, MockDiaryEntry], open_callback=None):
-      
+    def __init__(self, parent, entries, open_callback=None):
+        store1 = DiaryStorage()
         self.parent = parent
-        self.entries = entries  # expected to be dict keyed by "YYYY-MM-DD"
+        self.entries = store1.list_entries()  # expected to be dict keyed by "YYYY-MM-DD"
         self.open_callback = open_callback
         self.ascending = True
         self.id_map = {}  # map tree iid -> date_key
+
 
         # Create viewer window
         self.window = tk.Toplevel(parent)
@@ -337,18 +337,18 @@ class EntriesViewer:
         # Treeview for entries
         self.tree = ttk.Treeview(
             main_frame,
-            columns=("Date", "Time", "Title"),
+            columns=("Date", "Title", "Content"),
             show="headings",
             height=14
         )
 
         self.tree.heading("Date", text="Date")
-        self.tree.heading("Time", text="Time")
         self.tree.heading("Title", text="Title")
+        self.tree.heading("Content", text="Content")
 
         self.tree.column("Date", width=110, anchor=tk.CENTER)
-        self.tree.column("Time", width=100, anchor=tk.CENTER)
-        self.tree.column("Title", width=380, anchor=tk.W)
+        self.tree.column("Title", width=100, anchor=tk.CENTER)
+        self.tree.column("Content", width=380, anchor=tk.CENTER)
 
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -386,20 +386,23 @@ class EntriesViewer:
         # Build sorted list of entries (entries is a dict of date_key -> MockDiaryEntry)
         sorted_entries = sorted(
             self.entries.values(),
-            key=lambda e: datetime.strptime(e.created_at, "%Y-%m-%d %H:%M:%S"),
+            key=lambda e: datetime.strptime(e['date'], "%Y-%m-%d"),
             reverse=not self.ascending
         )
 
+        def preview_text(text, limit=10):
+            return text[:limit] + "..." if len(text) > limit else text
+
         # Insert with sequential iids and store mapping to date_key
         for idx, entry in enumerate(sorted_entries):
-            dt = datetime.strptime(entry.created_at, "%Y-%m-%d %H:%M:%S")
+            dt = datetime.strptime(entry['date'], "%Y-%m-%d")
             iid = str(idx)
-            self.id_map[iid] = entry.date  # date_key (YYYY-MM-DD)
+            self.id_map[iid] = entry['date']  # date_key (YYYY-MM-DD)
             self.tree.insert(
                 "",
                 tk.END,
                 iid=iid,
-                values=(dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M:%S"), entry.title or "Untitled")
+                values=(dt.strftime("%Y-%m-%d"), preview_text(entry['title'], 8) or "Untitled", preview_text(entry['content'], 20))
             )
 
     def toggle_order(self):
@@ -481,13 +484,12 @@ class SearchDialog:
         options_frame = ttk.Frame(search_frame)
         options_frame.pack(fill=tk.X)
         
-        self.search_content = tk.BooleanVar(value=True)
-        self.search_titles = tk.BooleanVar(value=True)
+        self.search_option = tk.StringVar(value="titleContent")
         
-        ttk.Checkbutton(options_frame, text="Search in content", 
-                       variable=self.search_content).pack(side=tk.LEFT)
-        ttk.Checkbutton(options_frame, text="Search in titles", 
-                       variable=self.search_titles).pack(side=tk.LEFT, padx=(20, 0))
+        ttk.Radiobutton(options_frame, text="Search in titles and content", 
+                       variable=self.search_option, value="titleContent").pack(side=tk.LEFT)
+        ttk.Radiobutton(options_frame, text="Search in dates (format: 2025-04-31)", 
+                       variable=self.search_option, value="date").pack(side=tk.LEFT, padx=(20, 0))
         
         # Search button
         ttk.Button(search_frame, text="🔍 Search", 
@@ -545,33 +547,42 @@ class SearchDialog:
             messagebox.showwarning("Search", "Please enter a search term!")
             return
         
-        if not (self.search_content.get() or self.search_titles.get()):
+        if not (self.search_option.get()):
             messagebox.showwarning("Search", "Please select at least one search option!")
             return
         
         # Clear previous results
         for item in self.results_tree.get_children():
             self.results_tree.delete(item)
-        
+
+        diary1 = Diary()
+
+        search_choice = self.search_option.get()
+
+        if(search_choice == "titleContent"):
+            results = diary1.search_by_keyword(search_term)
+        else:
+            results = diary1.search_by_date(search_term)
+
         # Mock search results for demonstration
-        mock_results = [
-            {"date": "2024-01-15", "title": "Morning Thoughts", 
-             "preview": f"Found '{search_term}' in this entry about daily reflections..."},
-            {"date": "2024-02-03", "title": "Weekend Adventures", 
-             "preview": f"This entry contains '{search_term}' and describes outdoor activities..."},
-            {"date": "2024-02-20", "title": "", 
-             "preview": f"Untitled entry with '{search_term}' mentioned in the content..."}
-        ]
+        # mock_results = [
+        #     {"date": "2024-01-15", "title": "Morning Thoughts", 
+        #      "preview": f"Found '{search_term}' in this entry about daily reflections..."},
+        #     {"date": "2024-02-03", "title": "Weekend Adventures", 
+        #      "preview": f"This entry contains '{search_term}' and describes outdoor activities..."},
+        #     {"date": "2024-02-20", "title": "", 
+        #      "preview": f"Untitled entry with '{search_term}' mentioned in the content..."}
+        # ]
         
         # Populate results
-        for i, result in enumerate(mock_results, 1):
+        for i, result in enumerate(results, 1):
             self.results_tree.insert('', tk.END, 
                                    text=str(i),
                                    values=(result['date'], 
                                           result['title'] or 'Untitled',
-                                          result['preview']))
+                                          result['content']))
         
-        messagebox.showinfo("Search Complete", f"Found {len(mock_results)} entries!")
+        messagebox.showinfo("Search Complete", f"Found {len(results)} entries!")
     
     def _open_selected_entry(self, event=None):
         """Opens the selected search result"""
@@ -596,8 +607,6 @@ class SearchDialog:
 class DiaryMainInterface:
     """Main diary application interface"""
     
-   
-
     def __init__(self):
         # Initialize main window
         self.root = tk.Tk()
@@ -609,7 +618,7 @@ class DiaryMainInterface:
         self.current_date = None
         self.is_modified = False
         self.is_saving = False  # Flag to prevent concurrent operations
-        self.mock_entries = {}   # Mock data storage for frontend demo
+        self.mock_entries = {}  # Mock data storage for frontend demo
         self.action_buttons = {}  # Initialize action_buttons dictionary
         
         # Configure styles
@@ -640,12 +649,13 @@ class DiaryMainInterface:
         login_dialog = LoginDialog(self.root)
         self.root.wait_window(login_dialog.dialog)
         
-        if login_dialog.success:
-            messagebox.showinfo("Welcome", 
-                              f"Welcome to your personal diary!\nPassword set: {login_dialog.password}")
-            return True
+        # if login_dialog.success:
+        #     messagebox.showinfo("Welcome", 
+        #                       f"Welcome to your personal diary!\nPassword set: {login_dialog.password}")
+        #     return True
         
-        return False
+        return True
+        # return False
     
     def _create_main_interface(self):
         """Creates the main application interface"""
@@ -721,19 +731,14 @@ class DiaryMainInterface:
         """Creates quick action buttons panel"""
         actions_frame = ttk.LabelFrame(parent, text="⚡ Quick Actions", padding="10")
         actions_frame.pack(fill=tk.X, pady=(0, 15))
-        diaryStore = DiaryStorage()
-        entries_list = diaryStore.list_entries()
-        entries_edited = {
-            "entries": entries_list
-        }
-        print(self.mock_entries)
+        store1 = DiaryStorage()
         buttons = [
     ("💾 Save", self._save_current_entry),
     ("🔍 Search", self._show_search_dialog),
     # ("✏️ Edit", self._edit_current_entry),
     ("🗑️ Delete", self._delete_current_entry),
     ("📅 Today", self._go_to_today),
-    ("📋 View All", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
+    ("📋 View All", lambda: EntriesViewer(self.root, store1.list_entries(), self._load_date_entry))
 ]
         
         # Create and store button references
@@ -891,12 +896,15 @@ class DiaryMainInterface:
         # Load entry data (mock data for frontend demo)
         date_key = entry_date.strftime("%Y-%m-%d")
         
-        if date_key in self.mock_entries:
-            entry = self.mock_entries[date_key]
+        store1 = DiaryStorage()
+        entries_list = store1.list_entries()
+
+        if date_key in entries_list:
+            entry = entries_list[date_key]
             self.title_entry.delete(0, tk.END)
-            self.title_entry.insert(0, entry.title)
+            self.title_entry.insert(0, entry['title'])
             self.text_editor.delete(1.0, tk.END)
-            self.text_editor.insert(1.0, entry.content)
+            self.text_editor.insert(1.0, entry['content'])
             self.status_label.config(text=f"Loaded entry from {formatted_date}")
             self._update_button_states(is_new_entry=False)
         else:
@@ -929,9 +937,10 @@ class DiaryMainInterface:
         if not self.current_date:
             messagebox.showwarning("No Date Selected", "Please select a date first!")
             return
-
+        store1 = DiaryStorage()
+        entries_list = store1.list_entries()
         date_key = self.current_date.strftime("%Y-%m-%d")
-        if date_key not in self.mock_entries:
+        if date_key not in entries_list:
             messagebox.showinfo("No Entry", "No entry exists for this date to edit!")
             return
 
@@ -972,8 +981,15 @@ class DiaryMainInterface:
                 return
         
         # Save to mock storage
-        date_key = self.current_date.strftime("%d-%m-%Y")
-        self.mock_entries[date_key] = MockDiaryEntry(date_key, content, title)
+        date_key = self.current_date.strftime("%Y-%m-%d")
+        diary1 = Diary()
+        diary1.create_entry( {
+             "title": title,
+            "content": content,
+             "date": date_key
+        })
+
+        # self.mock_entries[date_key] = MockDiaryEntry(date_key, content, title)
         
         try:
             # Update UI
@@ -985,35 +1001,13 @@ class DiaryMainInterface:
             self._update_button_states(is_new_entry=False)
             
             messagebox.showinfo("Save Successful", f"Entry saved for {formatted_date}!")
-
-            diaryFns = Diary()
-            diaryStore = DiaryStorage()
-            entries_list = diaryStore.list_entries()
-
-
-            entryDict = {
-                "title": title,
-                "content": content,
-                "date": date_key,
-            }
-            print(self.mock_entries)
-
-            for entry in entries_list:
-                if(entry["date"] == date_key):
-                    diaryFns.edit_entry(date_key, entryDict)
-                    return
-
-            diaryFns.create_entry(entryDict)
-
         finally:
             self.is_saving = False  # Reset saving flag
     
     def _delete_current_entry(self):
-
-        diary1 = Diary()
-
-        
         """Deletes the current diary entry"""
+        store1 = DiaryStorage()
+        entries_list = store1.list_entries()
         try:
             if not self.current_date:
                 messagebox.showwarning("No Date Selected", "Please select a date first!")
@@ -1021,22 +1015,24 @@ class DiaryMainInterface:
             
             date_key = self.current_date.strftime("%Y-%m-%d")
             
-            if date_key not in self.mock_entries:
+            if date_key not in entries_list:
                 messagebox.showinfo("No Entry", "No entry exists for this date!")
                 return
             
             # Save the entry temporarily in case we need to restore it
-            temp_entry = self.mock_entries[date_key]
+            temp_entry = entries_list[date_key]
             
             # Confirm deletion
             formatted_date = self.current_date.strftime("%B %d, %Y")
             result = messagebox.askyesno("Confirm Deletion", 
                                        f"Are you sure you want to delete the entry for {formatted_date}?")
             
+            diary1 = Diary()
             if result:
                 try:
                     # Attempt deletion
-                    del self.mock_entries[date_key]
+                    # del entries_list[date_key]
+                    diary1.delete_entry(date_key)
                     self.title_entry.delete(0, tk.END)
                     self.text_editor.delete(1.0, tk.END)
                     self.is_modified = False
@@ -1045,10 +1041,9 @@ class DiaryMainInterface:
                     
                     # Update button states after successful deletion
                     self._update_button_states(is_new_entry=True)
-                    diary1.delete_entry(date_key)
                 except Exception as e:
                     # Restore the entry if deletion fails
-                    self.mock_entries[date_key] = temp_entry
+                    self.entries_list[date_key] = temp_entry
                     raise Exception(f"Failed to delete entry: {str(e)}")
                     
         except Exception as e:
@@ -1123,15 +1118,17 @@ class DiaryMainInterface:
     
     def _show_statistics(self):
         """Shows diary statistics"""
-        total_entries = len(self.mock_entries)
-        total_words = sum(len(entry.content.split()) for entry in self.mock_entries.values())
+        store1 = DiaryStorage()
+        entries_list = store1.list_entries()
+        total_entries = len(entries_list)
+        total_words = sum(len(entry['content'].split()) for entry in entries_list.values())
         
         stats_msg = f"""📊 Diary Statistics:
         
 📝 Total Entries: {total_entries}
 📖 Total Words: {total_words}
 ⭐ Average Words per Entry: {total_words // max(total_entries, 1)}
-📅 Date Range: {len(self.mock_entries)} days with entries"""
+📅 Date Range: {len(entries_list)} days with entries"""
         
         messagebox.showinfo("Diary Statistics", stats_msg)
     
