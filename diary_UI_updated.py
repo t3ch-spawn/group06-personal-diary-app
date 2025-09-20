@@ -6,6 +6,12 @@ from datetime import datetime, date
 from typing import Dict, Optional, List
 from storage import DiaryStorage
 from diary import Diary
+import json, os
+
+
+currUser = {
+    "name": ""
+}
 
 
 class DiaryExceptions:
@@ -35,129 +41,194 @@ class MockDiaryEntry:
 
 
 class LoginDialog:
-    """Frontend password authentication dialog"""
-    
+    """Frontend username/password authentication dialog"""
+
     def __init__(self, parent):
         self.parent = parent
         self.success = False
+        self.username = ""
         self.password = ""
-        
-        # Create login window
+
+        # Create login window (1.5x bigger than before)
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("Personal Diary - Login")
-        self.dialog.geometry("350x250")
+        self.dialog.geometry("525x420")  # was 350x280
         self.dialog.resizable(False, False)
         self.dialog.grab_set()
-        
+
         # Center the dialog on screen
         self._center_window()
-        
+
         # Create the login interface
         self._create_login_interface()
-        
+
         # Handle window closing
         self.dialog.protocol("WM_DELETE_WINDOW", self._on_cancel)
-    
+
     def _center_window(self):
         """Centers the login dialog on screen"""
         self.dialog.transient(self.parent)
         self.dialog.update_idletasks()
-        x = (self.dialog.winfo_screenwidth() // 2) - (350 // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (250 // 2)
-        self.dialog.geometry(f"350x250+{x}+{y}")
-    
+        x = (self.dialog.winfo_screenwidth() // 2) - (525 // 2)
+        y = (self.dialog.winfo_screenheight() // 2) - (420 // 2)
+        self.dialog.geometry(f"525x420+{x}+{y}")
+
     def _create_login_interface(self):
         """Creates the login interface elements"""
         # Main container frame
-        main_frame = ttk.Frame(self.dialog, padding="30")
+        main_frame = ttk.Frame(self.dialog, padding="40")
         main_frame.pack(fill=tk.BOTH, expand=True)
-        
+
         # Application title
-        title_label = ttk.Label(main_frame, text="🔒 Personal Diary", 
-                               font=('Arial', 18, 'bold'))
+        title_label = ttk.Label(
+            main_frame, text="🔒 Personal Diary",
+            font=('Arial', 20, 'bold')
+        )
         title_label.pack(pady=(0, 30))
-        
+
         # Login form frame
         form_frame = ttk.Frame(main_frame)
         form_frame.pack(fill=tk.X, pady=(0, 20))
-        
+
+        # Username label and entry
+        ttk.Label(form_frame, text="Username:", font=('Arial', 12)).pack(anchor=tk.W, pady=(0, 5))
+        self.username_entry = ttk.Entry(form_frame, width=40, font=('Arial', 12))
+        self.username_entry.pack(fill=tk.X, pady=(0, 15))
+
         # Password label and entry
-        ttk.Label(form_frame, text="Enter your password:", 
-                 font=('Arial', 11)).pack(anchor=tk.W, pady=(0, 5))
-        
-        self.password_entry = ttk.Entry(form_frame, show="*", width=30, 
-                                       font=('Arial', 11))
+        ttk.Label(form_frame, text="Password:", font=('Arial', 12)).pack(anchor=tk.W, pady=(0, 5))
+        self.password_entry = ttk.Entry(form_frame, show="*", width=40, font=('Arial', 12))
         self.password_entry.pack(fill=tk.X, pady=(0, 15))
-        
+
         # Bind Enter key to login
         self.password_entry.bind('<Return>', lambda e: self._handle_login())
-        
+
         # Button container
         button_frame = ttk.Frame(form_frame)
         button_frame.pack(fill=tk.X)
-        
+
         # Login button
-        login_btn = ttk.Button(button_frame, text="Login", 
-                              command=self._handle_login,
-                              style='Accent.TButton')
+        login_btn = ttk.Button(
+            button_frame, text="Login",
+            command=self._handle_login,
+            style='Accent.TButton'
+        )
         login_btn.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Create new diary button
-        # new_btn = ttk.Button(button_frame, text="Create New Diary", 
-        #                     command=self._handle_new_diary)
-        # new_btn.pack(side=tk.LEFT)
-        
+
+        # Register new user button
+        register_btn = ttk.Button(
+            button_frame, text="Register New User",
+            command=self._open_register_dialog
+        )
+        register_btn.pack(side=tk.LEFT)
+
         # Cancel button
-        cancel_btn = ttk.Button(button_frame, text="Cancel", 
-                               command=self._on_cancel)
+        cancel_btn = ttk.Button(button_frame, text="Cancel", command=self._on_cancel)
         cancel_btn.pack(side=tk.RIGHT)
-        
-        # Focus on password entry
-        self.password_entry.focus()
-    
+
+        # Focus on username entry
+        self.username_entry.focus()
+
     def _handle_login(self):
-        """Handles login button click - Frontend simulation"""
-        password = self.password_entry.get().strip()
-        
-        if not password:
-            messagebox.showerror("Login Error", "Please enter a password!")
+        """Handles login with JSON file validation"""
+        self.username = self.username_entry.get().strip()
+        self.password = self.password_entry.get().strip()
+
+        if not self.username or not self.password:
+            messagebox.showerror("Login Error", "Please enter both username and password!")
             return
-        
-        # Frontend simulation - accept any non-empty password
-        if len(password) >= 3:
-            self.password = password
+
+        try:
+            with open("diary.json", "r") as f:
+                users = json.load(f)
+        except FileNotFoundError:
+            messagebox.showerror("Login Error", "User does not exist")
+            return
+
+        # Check if user exists
+        if self.username not in users:
+            messagebox.showerror("Login Error", "User does not exist!")
+            return
+
+        # Validate password
+        stored_password = users[self.username]["password"]
+        if self.password == stored_password:
             self.success = True
             messagebox.showinfo("Success", "Login successful!")
+            currUser["name"] = self.username
             self.dialog.destroy()
         else:
-            messagebox.showerror("Login Error", "Password must be at least 3 characters!")
+            messagebox.showerror("Login Error", "Incorrect password!")
             self.password_entry.delete(0, tk.END)
             self.password_entry.focus()
-    
-    def _handle_new_diary(self):
-        """Handles new diary creation - Frontend simulation"""
-        password = simpledialog.askstring("New Diary", 
-                                         "Create a password for your new diary:", 
-                                         show="*")
-        if password:
-            if len(password) < 3:
-                messagebox.showerror("Error", "Password must be at least 3 characters!")
-                return
-            
-            confirm = simpledialog.askstring("Confirm Password", 
-                                           "Confirm your password:", show="*")
-            if password == confirm:
-                self.password = password
-                self.success = True
-                messagebox.showinfo("Success", "New diary created successfully!")
-                self.dialog.destroy()
-            else:
-                messagebox.showerror("Error", "Passwords don't match!")
-    
+
+    def _open_register_dialog(self):
+        """Opens a dialog for registering a new user"""
+        reg_dialog = tk.Toplevel(self.dialog)
+        reg_dialog.title("Register New User")
+        width, height = 400, 320
+        reg_dialog.geometry(f"{width}x{height}")
+        reg_dialog.resizable(False, False)
+        reg_dialog.transient(self.dialog)
+        reg_dialog.grab_set()
+
+        # Center the dialog
+        reg_dialog.update_idletasks()
+        x = (reg_dialog.winfo_screenwidth() // 2) - (width // 2)
+        y = (reg_dialog.winfo_screenheight() // 2) - (height // 2)
+        reg_dialog.geometry(f"{width}x{height}+{x}+{y}")
+        
+
+        frame = ttk.Frame(reg_dialog, padding="20")
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(frame, text="Create Username:", font=('Arial', 11)).pack(anchor=tk.W, pady=(0, 5))
+        username_entry = ttk.Entry(frame, width=30, font=('Arial', 11))
+        username_entry.pack(fill=tk.X, pady=(0, 15))
+
+        ttk.Label(frame, text="Create Password:", font=('Arial', 11)).pack(anchor=tk.W, pady=(0, 5))
+        password_entry = ttk.Entry(frame, show="*", width=30, font=('Arial', 11))
+        password_entry.pack(fill=tk.X, pady=(0, 15))
+
+        ttk.Label(frame, text="Confirm Password:", font=('Arial', 11)).pack(anchor=tk.W, pady=(0, 5))
+        confirm_entry = ttk.Entry(frame, show="*", width=30, font=('Arial', 11))
+        confirm_entry.pack(fill=tk.X, pady=(0, 15))
+
+        # Buttons
+        btn_frame = ttk.Frame(frame)
+        btn_frame.pack(fill=tk.X, pady=(10, 0))
+
+        def handle_register():
+                """UI-only password match check"""
+                if password_entry.get() != confirm_entry.get():
+                    messagebox.showerror("Error", "Passwords do not match!")
+                else:
+                    username = username_entry.get().strip()
+
+                    users = {}
+                    if os.path.exists("diary.json"):
+                        with open("diary.json", "r") as f:
+                            try:
+                                users = json.load(f)
+                            except json.JSONDecodeError:
+                                users = {}
+
+                    if username in users:
+                        messagebox.showerror("Error", f"User '{username}' already exists!")
+                        return
+
+                messagebox.showinfo("Success", "User registered.")
+                store1 = DiaryStorage()
+                store1.add_user(username, password_entry.get())
+                reg_dialog.destroy()
+
+        ttk.Button(btn_frame, text="Register", command=handle_register).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(btn_frame, text="Cancel", command=reg_dialog.destroy).pack(side=tk.RIGHT)
+
     def _on_cancel(self):
         """Handles dialog cancellation"""
         self.success = False
-        self.dialog.destroy()
+        self.parent.destroy()  
 
 
 class CalendarWidget:
@@ -317,7 +388,7 @@ class EntriesViewer:
     def __init__(self, parent, entries, open_callback=None):
         store1 = DiaryStorage()
         self.parent = parent
-        self.entries = store1.list_entries("user1")  # expected to be dict keyed by "YYYY-MM-DD"
+        self.entries = store1.list_entries(currUser["name"])  # expected to be dict keyed by "YYYY-MM-DD"
         self.open_callback = open_callback
         self.ascending = True
         self.id_map = {}  # map tree iid -> date_key
@@ -326,9 +397,18 @@ class EntriesViewer:
         # Create viewer window
         self.window = tk.Toplevel(parent)
         self.window.title("📋 All Diary Entries")
-        self.window.geometry("640x420")
+        width, height = 640, 420
+        self.window.geometry(f"{width}x{height}")
         self.window.transient(parent)
         self.window.grab_set()
+        
+        # Center the window
+        self.window.update_idletasks()
+        x = (self.window.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.window.winfo_screenheight() // 2) - (height // 2)
+        self.window.geometry(f"{width}x{height}+{x}+{y}")
+
+        
 
         # Main frame
         main_frame = ttk.Frame(self.window, padding="10")
@@ -560,9 +640,9 @@ class SearchDialog:
         search_choice = self.search_option.get()
 
         if(search_choice == "titleContent"):
-            results = diary1.search_by_keyword(search_term, 'user1')
+            results = diary1.search_by_keyword(search_term, currUser["name"])
         else:
-            results = diary1.search_by_date(search_term, 'user1')
+            results = diary1.search_by_date(search_term, currUser["name"])
 
         # Mock search results for demonstration
         # mock_results = [
@@ -738,7 +818,7 @@ class DiaryMainInterface:
     # ("✏️ Edit", self._edit_current_entry),
     ("🗑️ Delete", self._delete_current_entry),
     ("📅 Today", self._go_to_today),
-    ("📋 View All", lambda: EntriesViewer(self.root, store1.list_entries("user1"), self._load_date_entry))
+    ("📋 View All", lambda: EntriesViewer(self.root, store1.list_entries(currUser["name"]), self._load_date_entry))
 ]
         
         # Create and store button references
@@ -897,7 +977,7 @@ class DiaryMainInterface:
         date_key = entry_date.strftime("%Y-%m-%d")
         
         store1 = DiaryStorage()
-        entries_list = store1.list_entries("user1")
+        entries_list = store1.list_entries(currUser["name"])
 
         if date_key in entries_list:
             entry = entries_list[date_key]
@@ -938,7 +1018,7 @@ class DiaryMainInterface:
             messagebox.showwarning("No Date Selected", "Please select a date first!")
             return
         store1 = DiaryStorage()
-        entries_list = store1.list_entries("user1")
+        entries_list = store1.list_entries(currUser["name"])
         date_key = self.current_date.strftime("%Y-%m-%d")
         if date_key not in entries_list:
             messagebox.showinfo("No Entry", "No entry exists for this date to edit!")
@@ -987,7 +1067,7 @@ class DiaryMainInterface:
              "title": title,
             "content": content,
              "date": date_key
-        }, "user1")
+        }, currUser["name"])
 
         # self.mock_entries[date_key] = MockDiaryEntry(date_key, content, title)
         
@@ -1007,7 +1087,7 @@ class DiaryMainInterface:
     def _delete_current_entry(self):
         """Deletes the current diary entry"""
         store1 = DiaryStorage()
-        entries_list = store1.list_entries("user1")
+        entries_list = store1.list_entries(currUser["name"])
         try:
             if not self.current_date:
                 messagebox.showwarning("No Date Selected", "Please select a date first!")
@@ -1032,7 +1112,7 @@ class DiaryMainInterface:
                 try:
                     # Attempt deletion
                     # del entries_list[date_key]
-                    diary1.delete_entry(date_key, 'user1')
+                    diary1.delete_entry(date_key, currUser["name"])
                     self.title_entry.delete(0, tk.END)
                     self.text_editor.delete(1.0, tk.END)
                     self.is_modified = False
@@ -1119,7 +1199,7 @@ class DiaryMainInterface:
     def _show_statistics(self):
         """Shows diary statistics"""
         store1 = DiaryStorage()
-        entries_list = store1.list_entries("user1")
+        entries_list = store1.list_entries(currUser["name"])
         total_entries = len(entries_list)
         total_words = sum(len(entry['content'].split()) for entry in entries_list.values())
         

@@ -91,7 +91,7 @@ class Diary:
 
 
 store1 = DiaryStorage()
-# store1.add_user("user3", "12345")
+# store1.add_user("user1", "12345")
 diary1 = Diary()
 # asssss= diary1.create_entry({
 #     "title": "Morning routine",
