@@ -601,7 +601,9 @@ class DiaryMainInterface:
         # Current state variables
         self.current_date = None
         self.is_modified = False
+        self.is_saving = False  # Flag to prevent concurrent operations
         self.mock_entries = {}  # Mock data storage for frontend demo
+        self.action_buttons = {}  # Initialize action_buttons dictionary
         
         # Configure styles
         self._configure_styles()
@@ -657,10 +659,7 @@ class DiaryMainInterface:
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="📁 File", menu=file_menu)
-        file_menu.add_command(label="💾 Save Entry", command=self._save_current_entry,
-                             accelerator="Ctrl+S")
-        file_menu.add_separator()
-        file_menu.add_command(label="📊 Export Diary", command=self._export_diary)
+        file_menu.add_command(label=" Export Diary", command=self._export_diary)
         file_menu.add_command(label="📥 Import Entries", command=self._import_entries)
         file_menu.add_separator()
         file_menu.add_command(label="🚪 Exit", command=self._handle_exit)
@@ -668,11 +667,6 @@ class DiaryMainInterface:
         # Edit menu
         edit_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="✏️ Edit", menu=edit_menu)
-        edit_menu.add_command(label="🔍 Search Entries", command=self._show_search_dialog,
-                             accelerator="Ctrl+F")
-        edit_menu.add_command(label="🗑️ Delete Entry", command=self._delete_current_entry,
-                             accelerator="Del")
-        edit_menu.add_separator()
         edit_menu.add_command(label="📋 Copy Text", command=self._copy_text,
                              accelerator="Ctrl+C")
         edit_menu.add_command(label="📄 Paste Text", command=self._paste_text,
@@ -721,22 +715,24 @@ class DiaryMainInterface:
         actions_frame = ttk.LabelFrame(parent, text="⚡ Quick Actions", padding="10")
         actions_frame.pack(fill=tk.X, pady=(0, 15))
 
-        buttons_info = [
-    ("💾 Save Entry", self._save_current_entry),
+        buttons = [
+    ("💾 Save", self._save_current_entry),
     ("🔍 Search", self._show_search_dialog),
+    ("✏️ Edit", self._edit_current_entry),
     ("🗑️ Delete", self._delete_current_entry),
-    ("🔄 Clear", self._clear_current_entry),
     ("📅 Today", self._go_to_today),
-    ("📊 Stats", self._show_statistics),
-    ("📋 View Entries", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry)),
+    ("📋 View All", lambda: EntriesViewer(self.root, self.mock_entries, self._load_date_entry))
 ]
         
-    
-        
-        for i, (text, command) in enumerate(buttons_info):
+        # Create and store button references
+        for i, (text, command) in enumerate(buttons):
             btn = ttk.Button(actions_frame, text=text, command=command, width=15)
             row, col = divmod(i, 2)
             btn.grid(row=row, column=col, padx=2, pady=2, sticky='ew')
+            self.action_buttons[text] = btn  # Store button reference
+            
+        # Initially disable edit and delete buttons
+        self._update_button_states(is_new_entry=True)
         
         # Configure grid weights
         actions_frame.columnconfigure(0, weight=1)
@@ -850,6 +846,28 @@ class DiaryMainInterface:
         # Load the selected date
         self._load_date_entry(selected_date)
     
+    def _update_button_states(self, is_new_entry=False):
+        """Updates the state of edit and delete buttons based on entry state"""
+        try:
+            edit_btn = self.action_buttons.get("✏️ Edit")
+            delete_btn = self.action_buttons.get("🗑️ Delete")
+
+            if is_new_entry or not self.current_date:
+                # Disable edit and delete buttons for new entries
+                if edit_btn:
+                    edit_btn.config(state='disabled')
+                if delete_btn:
+                    delete_btn.config(state='disabled')
+            else:
+                # Enable edit and delete buttons for existing entries
+                if edit_btn:
+                    edit_btn.config(state='normal')
+                if delete_btn:
+                    delete_btn.config(state='normal')
+        except Exception as e:
+            print(f"Button state update error: {e}")
+            messagebox.showerror("Error", "Failed to update button states")
+    
     def _load_date_entry(self, entry_date):
         """Loads diary entry for the specified date"""
         self.current_date = entry_date
@@ -868,11 +886,13 @@ class DiaryMainInterface:
             self.text_editor.delete(1.0, tk.END)
             self.text_editor.insert(1.0, entry.content)
             self.status_label.config(text=f"Loaded entry from {formatted_date}")
+            self._update_button_states(is_new_entry=False)
         else:
             # Clear for new entry
             self.title_entry.delete(0, tk.END)
             self.text_editor.delete(1.0, tk.END)
             self.status_label.config(text=f"New entry for {formatted_date}")
+            self._update_button_states(is_new_entry=True)
         
         # Reset modification flag
         self.is_modified = False
@@ -892,55 +912,111 @@ class DiaryMainInterface:
         word_count = len(content.split()) if content else 0
         self.word_count_label.config(text=f"Words: {word_count}")
     
-    def _save_current_entry(self):
-        """Saves the current diary entry"""
+    def _edit_current_entry(self):
+        """Enables editing of the current diary entry"""
         if not self.current_date:
             messagebox.showwarning("No Date Selected", "Please select a date first!")
             return
+
+        date_key = self.current_date.strftime("%Y-%m-%d")
+        if date_key not in self.mock_entries:
+            messagebox.showinfo("No Entry", "No entry exists for this date to edit!")
+            return
+
+        # Enable text editor and title entry if they were disabled
+        self.title_entry.config(state='normal')
+        self.text_editor.config(state='normal')
+        
+        # Set focus to the title entry
+        self.title_entry.focus()
+        
+        # Update status
+        self.status_label.config(text="✏️ Editing entry - Remember to save your changes!")
+        self.is_modified = True
+
+    def _save_current_entry(self):
+        """Saves the current diary entry"""
+        if self.is_saving:
+            messagebox.showinfo("Please Wait", "Save operation in progress...")
+            return
+            
+        if not self.current_date:
+            messagebox.showwarning("No Date Selected", "Please select a date first!")
+            return
+            
+        self.is_saving = True  # Set saving flag
         
         # Get current content
         title = self.title_entry.get().strip()
         content = self.text_editor.get(1.0, tk.END).strip()
         
-        if not title and not content:
-            messagebox.showinfo("Nothing to Save", "Entry is empty!")
-            return
+        # Check if there's any actual content (ignoring whitespace)
+        if not content:
+            if not title:
+                messagebox.showinfo("Nothing to Save", "Entry is empty!")
+                return
+            # If there's only a title, confirm with user
+            if not messagebox.askyesno("Save Entry", "Save entry with only title and no content?"):
+                return
         
         # Save to mock storage
         date_key = self.current_date.strftime("%Y-%m-%d")
         self.mock_entries[date_key] = MockDiaryEntry(date_key, content, title)
         
-        # Update UI
-        self.is_modified = False
-        formatted_date = self.current_date.strftime("%B %d, %Y")
-        self.status_label.config(text=f"✅ Entry saved for {formatted_date}")
-        
-        messagebox.showinfo("Save Successful", f"Entry saved for {formatted_date}!")
+        try:
+            # Update UI
+            self.is_modified = False
+            formatted_date = self.current_date.strftime("%B %d, %Y")
+            self.status_label.config(text=f"✅ Entry saved for {formatted_date}")
+            
+            # Enable edit and delete buttons after saving
+            self._update_button_states(is_new_entry=False)
+            
+            messagebox.showinfo("Save Successful", f"Entry saved for {formatted_date}!")
+        finally:
+            self.is_saving = False  # Reset saving flag
     
     def _delete_current_entry(self):
         """Deletes the current diary entry"""
-        if not self.current_date:
-            messagebox.showwarning("No Date Selected", "Please select a date first!")
-            return
-        
-        date_key = self.current_date.strftime("%Y-%m-%d")
-        
-        if date_key not in self.mock_entries:
-            messagebox.showinfo("No Entry", "No entry exists for this date!")
-            return
-        
-        # Confirm deletion
-        formatted_date = self.current_date.strftime("%B %d, %Y")
-        result = messagebox.askyesno("Confirm Deletion", 
-                                   f"Are you sure you want to delete the entry for {formatted_date}?")
-        
-        if result:
-            del self.mock_entries[date_key]
-            self.title_entry.delete(0, tk.END)
-            self.text_editor.delete(1.0, tk.END)
-            self.is_modified = False
-            self.status_label.config(text=f"🗑️ Entry deleted for {formatted_date}")
-            messagebox.showinfo("Delete Successful", f"Entry deleted for {formatted_date}!")
+        try:
+            if not self.current_date:
+                messagebox.showwarning("No Date Selected", "Please select a date first!")
+                return
+            
+            date_key = self.current_date.strftime("%Y-%m-%d")
+            
+            if date_key not in self.mock_entries:
+                messagebox.showinfo("No Entry", "No entry exists for this date!")
+                return
+            
+            # Save the entry temporarily in case we need to restore it
+            temp_entry = self.mock_entries[date_key]
+            
+            # Confirm deletion
+            formatted_date = self.current_date.strftime("%B %d, %Y")
+            result = messagebox.askyesno("Confirm Deletion", 
+                                       f"Are you sure you want to delete the entry for {formatted_date}?")
+            
+            if result:
+                try:
+                    # Attempt deletion
+                    del self.mock_entries[date_key]
+                    self.title_entry.delete(0, tk.END)
+                    self.text_editor.delete(1.0, tk.END)
+                    self.is_modified = False
+                    self.status_label.config(text=f"🗑️ Entry deleted for {formatted_date}")
+                    messagebox.showinfo("Delete Successful", f"Entry deleted for {formatted_date}!")
+                    
+                    # Update button states after successful deletion
+                    self._update_button_states(is_new_entry=True)
+                except Exception as e:
+                    # Restore the entry if deletion fails
+                    self.mock_entries[date_key] = temp_entry
+                    raise Exception(f"Failed to delete entry: {str(e)}")
+                    
+        except Exception as e:
+            messagebox.showerror("Delete Error", str(e))
+            print(f"Delete error: {e}")
     
     def _clear_current_entry(self):
         """Clears the current entry editor"""
@@ -1103,4 +1179,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-                
+
