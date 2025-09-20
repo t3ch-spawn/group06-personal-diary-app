@@ -87,23 +87,3 @@ class Diary:
         else:
             return []
        
-    
-
-
-store1 = DiaryStorage()
-# store1.add_user("user1", "12345")
-diary1 = Diary()
-# asssss= diary1.create_entry({
-#     "title": "Morning routine",
-#     "content": "content of yeah baby",
-#     "date": "07-08-2007"
-     
-# }, "user1")
-# asssss= diary1.delete_entry("07-08-2007", "user1")
-
-
-# res = diary1.search_by_keyword("mor", "user3")
-res = diary1.search_by_date("07-08-2007", "user3")
-
-print(res)
-# print(asssss)
