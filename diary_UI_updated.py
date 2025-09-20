@@ -317,7 +317,7 @@ class EntriesViewer:
     def __init__(self, parent, entries, open_callback=None):
         store1 = DiaryStorage()
         self.parent = parent
-        self.entries = store1.list_entries()  # expected to be dict keyed by "YYYY-MM-DD"
+        self.entries = store1.list_entries("user1")  # expected to be dict keyed by "YYYY-MM-DD"
         self.open_callback = open_callback
         self.ascending = True
         self.id_map = {}  # map tree iid -> date_key
@@ -560,9 +560,9 @@ class SearchDialog:
         search_choice = self.search_option.get()
 
         if(search_choice == "titleContent"):
-            results = diary1.search_by_keyword(search_term)
+            results = diary1.search_by_keyword(search_term, 'user1')
         else:
-            results = diary1.search_by_date(search_term)
+            results = diary1.search_by_date(search_term, 'user1')
 
         # Mock search results for demonstration
         # mock_results = [
@@ -738,7 +738,7 @@ class DiaryMainInterface:
     # ("✏️ Edit", self._edit_current_entry),
     ("🗑️ Delete", self._delete_current_entry),
     ("📅 Today", self._go_to_today),
-    ("📋 View All", lambda: EntriesViewer(self.root, store1.list_entries(), self._load_date_entry))
+    ("📋 View All", lambda: EntriesViewer(self.root, store1.list_entries("user1"), self._load_date_entry))
 ]
         
         # Create and store button references
@@ -897,7 +897,7 @@ class DiaryMainInterface:
         date_key = entry_date.strftime("%Y-%m-%d")
         
         store1 = DiaryStorage()
-        entries_list = store1.list_entries()
+        entries_list = store1.list_entries("user1")
 
         if date_key in entries_list:
             entry = entries_list[date_key]
@@ -938,7 +938,7 @@ class DiaryMainInterface:
             messagebox.showwarning("No Date Selected", "Please select a date first!")
             return
         store1 = DiaryStorage()
-        entries_list = store1.list_entries()
+        entries_list = store1.list_entries("user1")
         date_key = self.current_date.strftime("%Y-%m-%d")
         if date_key not in entries_list:
             messagebox.showinfo("No Entry", "No entry exists for this date to edit!")
@@ -987,7 +987,7 @@ class DiaryMainInterface:
              "title": title,
             "content": content,
              "date": date_key
-        })
+        }, "user1")
 
         # self.mock_entries[date_key] = MockDiaryEntry(date_key, content, title)
         
@@ -1007,7 +1007,7 @@ class DiaryMainInterface:
     def _delete_current_entry(self):
         """Deletes the current diary entry"""
         store1 = DiaryStorage()
-        entries_list = store1.list_entries()
+        entries_list = store1.list_entries("user1")
         try:
             if not self.current_date:
                 messagebox.showwarning("No Date Selected", "Please select a date first!")
@@ -1032,7 +1032,7 @@ class DiaryMainInterface:
                 try:
                     # Attempt deletion
                     # del entries_list[date_key]
-                    diary1.delete_entry(date_key)
+                    diary1.delete_entry(date_key, 'user1')
                     self.title_entry.delete(0, tk.END)
                     self.text_editor.delete(1.0, tk.END)
                     self.is_modified = False
@@ -1119,7 +1119,7 @@ class DiaryMainInterface:
     def _show_statistics(self):
         """Shows diary statistics"""
         store1 = DiaryStorage()
-        entries_list = store1.list_entries()
+        entries_list = store1.list_entries("user1")
         total_entries = len(entries_list)
         total_words = sum(len(entry['content'].split()) for entry in entries_list.values())
         
