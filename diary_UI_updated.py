@@ -29,17 +29,6 @@ class DiaryExceptions:
         """Raised when navigation operations fail"""
         pass
 
-
-class MockDiaryEntry:
-    """Mock diary entry for frontend demonstration"""
-    
-    def __init__(self, date_str: str, content: str = "", title: str = ""):
-        self.date = date_str
-        self.content = content
-        self.title = title
-        self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
 class LoginDialog:
     """Frontend username/password authentication dialog"""
 
@@ -401,7 +390,7 @@ class EntriesViewer:
         self.window.geometry(f"{width}x{height}")
         self.window.transient(parent)
         self.window.grab_set()
-        
+
         # Center the window
         self.window.update_idletasks()
         x = (self.window.winfo_screenwidth() // 2) - (width // 2)
