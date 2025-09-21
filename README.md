@@ -7,11 +7,22 @@ It allows users to register/login, add diary entries with a title and content, v
 
 ## ⚙️ Setup Instructions
 
-### 1. Install Python 3.12
-This project supports **Python 3.12**.  
-Download and install it from the official Python website:  
-👉 [Download Python 3.12](https://www.python.org/downloads/release/python-3120/)  
+### 1. Install Python
+This project requires **Python 3.12**.  
+- If you already have Python **3.12**, you’re good to go.  
+- If you only have Python **3.10 or 3.11**, you must install **Python 3.12** from [Download Python 3.12](https://www.python.org/downloads/release/python-3120/)  
 
+👉 **Note:**  
+If multiple Python versions are installed on your system, you can run this project with:  
+- Linux/Mac:
+  ```bash
+  python3.12 main.py
+  ```
+- Windows:
+  ```bash
+  py -3.12 main.py
+  ```
+👉   
 Verify your Python version:
 ```bash
 python --version
