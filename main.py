@@ -770,8 +770,8 @@ class DiaryMainInterface:
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="📁 File", menu=file_menu)
-        file_menu.add_command(label=" Export Diary", command=self._export_diary)
-        file_menu.add_command(label="📥 Import Entries", command=self._import_entries)
+        # file_menu.add_command(label=" Export Diary", command=self._export_diary)
+        # file_menu.add_command(label="📥 Import Entries", command=self._import_entries)
         file_menu.add_separator()
         file_menu.add_command(label="🚪 Exit", command=self._handle_exit)
         
