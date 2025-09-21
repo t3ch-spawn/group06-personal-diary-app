@@ -127,7 +127,7 @@ group06-personal-diary-app/
 ---
 
 ## 🎥 Demo Video
-[Video Link](https://drive.google.com/file/d/1p8Kd4QsayKQcS2wAVPTEKUASRRPxs608/view)
+[Video Link](https://drive.google.com/file/d/1N1ufF-kD6coiaLFF-oWhgFWz1FuZEqE0/view?usp=drive_link)
 
 ---
 
