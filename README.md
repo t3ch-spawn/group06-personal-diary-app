@@ -81,7 +81,7 @@ group06-personal-diary-app/
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/592801b9840b2fc7ea8b4226f8b5bae68d0db157)
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/pull/4/commits/aeac3b7d1f36c45c7f466907a66a40670516b736)
 
--- **Fadilah(Fadilah1-hub) – Testing & Security**  
+- **Fadilah(Fadilah1-hub) – Testing & Security**  
   Developed the Pytest test cases for the diary and storage modules, and implemented the security module for user authentication.
  [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/6a8808727e23af3f09c17be74745b9baa72163c8)
   
@@ -115,7 +115,7 @@ group06-personal-diary-app/
 ---
 
 ## 🎥 Demo Video
-*(Add your demo video link here once ready.)*
+[Video Link](https://drive.google.com/file/d/1p8Kd4QsayKQcS2wAVPTEKUASRRPxs608/view)
 
 ---
 
@@ -190,6 +190,7 @@ Click the **View All** button in the quick actions panel to open the **View All 
 
 Click the **Search** button in the quick actions panel to open the **Search Dialog**.  
 - You can search by **title or content** using keywords.  
-- You can also search by **date**, using the format `YYYY-MM-DD` (e.g., `2025-04-31`).  
+- You can search by **date**, using the format `YYYY-MM-DD` (e.g., `2025-04-31`).  
+- You can also search by **year** (e.g., `2025`), **month** (e.g., `05`), or **day** (e.g., `31`). 
 
 ![Search Dialog](assets/search.png)

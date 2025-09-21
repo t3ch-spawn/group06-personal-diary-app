@@ -239,7 +239,7 @@ class CalendarWidget:
         """Creates the calendar interface structure"""
         # Main calendar container
         self.frame = ttk.LabelFrame(self.parent, text="📅 Calendar Navigation", 
-                                   padding="15")
+                                   padding="15",)
         
         # Navigation header
         nav_frame = ttk.Frame(self.frame)
@@ -260,7 +260,7 @@ class CalendarWidget:
         self.next_button.pack(side=tk.RIGHT)
         
         # Calendar grid container
-        self.calendar_grid = ttk.Frame(self.frame)
+        self.calendar_grid = ttk.Frame(self.frame, width=800)
         self.calendar_grid.pack()
         
         # Today button for quick navigation
@@ -345,7 +345,7 @@ class CalendarWidget:
                         button_text = f"[{day}]"  # Mark today
                     
                     day_button = ttk.Button(self.calendar_grid, text=button_text, 
-                                          width=4,
+                                          width=3,
                                           command=lambda d=button_date: self._select_date(d))
                     day_button.grid(row=week_num, column=day_num, padx=1, pady=1, 
                                   sticky='nsew')
@@ -515,7 +515,7 @@ class SearchDialog:
         # Create search dialog
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("🔍 Search Diary Entries")
-        self.dialog.geometry("500x400")
+        self.dialog.geometry("500x600")
         self.dialog.transient(parent)
         self.dialog.grab_set()
         
@@ -530,7 +530,7 @@ class SearchDialog:
         self.dialog.update_idletasks()
         x = (self.dialog.winfo_screenwidth() // 2) - (500 // 2)
         y = (self.dialog.winfo_screenheight() // 2) - (400 // 2)
-        self.dialog.geometry(f"500x400+{x}+{y}")
+        self.dialog.geometry(f"500x600+{x}+{y}")
     
     def _create_search_interface(self):
         """Creates the search interface"""
@@ -555,10 +555,29 @@ class SearchDialog:
         
         self.search_option = tk.StringVar(value="titleContent")
         
-        ttk.Radiobutton(options_frame, text="Search in titles and content", 
+        # First row frame
+        row1 = ttk.Frame(options_frame)
+        row1.pack(fill=tk.X, pady=5)
+
+        ttk.Radiobutton(row1, text="Search for titles and content", 
                        variable=self.search_option, value="titleContent").pack(side=tk.LEFT)
-        ttk.Radiobutton(options_frame, text="Search in dates (format: 2025-04-31)", 
+        ttk.Radiobutton(row1, text="Search for dates (format: 2025-04-31)", 
                        variable=self.search_option, value="date").pack(side=tk.LEFT, padx=(20, 0))
+
+        # Second row frame
+        row2 = ttk.Frame(options_frame)
+        row2.pack(fill=tk.X, pady=5)
+
+        ttk.Radiobutton(row2, text="Search for day (format: 31)", 
+                       variable=self.search_option, value="day").pack(side=tk.LEFT)
+        ttk.Radiobutton(row2, text="Search for month (format: 05)", 
+                       variable=self.search_option, value="month").pack(side=tk.LEFT, padx=(20, 0))
+        
+         # Third row frame
+        row3 = ttk.Frame(options_frame)
+        row3.pack(fill=tk.X, pady=5)    
+        ttk.Radiobutton(row3, text="Search for year (format: 2025)", 
+               variable=self.search_option, value="year").pack(side=tk.LEFT)
         
         # Search button
         ttk.Button(search_frame, text="🔍 Search", 
@@ -630,8 +649,14 @@ class SearchDialog:
 
         if(search_choice == "titleContent"):
             results = diary1.search_by_keyword(search_term, currUser["name"])
-        else:
+        elif(search_choice == "date"):
             results = diary1.search_by_date(search_term, currUser["name"])
+        elif(search_choice == "month"):
+            results = diary1.search_by_date(search_term, currUser["name"], "month")
+        elif(search_choice == "day"):
+            results = diary1.search_by_date(search_term, currUser["name"], "day")
+        elif(search_choice == "year"):
+            results = diary1.search_by_date(search_term, currUser["name"], "year")
 
         # Mock search results for demonstration
         # mock_results = [

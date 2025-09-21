@@ -65,7 +65,6 @@ class Diary:
 
         # Create a copy of the entries of the user with the 'username'
         user_entries = self.store.list_entries(username)
-        print(user_entries.items())
         for date_key, entry in user_entries.items():
             if pattern.search(entry["title"]) or pattern.search(entry["content"]):
                 results.append(entry)
@@ -73,7 +72,7 @@ class Diary:
         return results
 
 # This function searches the json list of entries for a particular entry using the date assigned to that entry
-    def search_by_date(self, date_key, username):
+    def search_by_date(self, search_param, username, type=None):
         """Search by exact date key"""
 
         # Create a copy of the users_list(basically the json file). 
@@ -82,8 +81,32 @@ class Diary:
         # Create a copy of the entries of the user with the 'username'
         user_entries = self.store.list_entries(username)
 
-        if date_key in user_entries:
-            return [user_entries[date_key]]
-        else:
-            return []
-       
+        results = []
+
+        day_pattern = re.compile(rf"\d\d\d\d-\d\d-{re.escape(search_param)}")      # search by month
+        month_pattern = re.compile(rf"\d\d\d\d-{re.escape(search_param)}-\d\d")    # search by day
+        year_pattern = re.compile(rf"{re.escape(search_param)}-\d\d-\d\d")     #search by year
+
+        for date_key, entry in user_entries.items():
+            # print(date_key)
+            # If searching by an exact date, i.e "07-04-2005"
+            if(search_param == date_key):
+                return [user_entries[date_key]]
+
+            # If searching by a particular day, i.e 24, 29, 31
+            if(day_pattern.match(date_key) and type=="day"):
+                results.append(entry)
+                
+           
+            # If searching by a particular month, i.e 05(May), 01(Jan), 03(March)
+            if(month_pattern.match(date_key) and type == 'month'):
+                results.append(entry)
+                
+           
+            # If searching by a particular day, i.e 2024, 2022, 2020
+            if(year_pattern.match(date_key) and type == 'year'):
+                results.append(entry)
+                
+        return results
+
+
