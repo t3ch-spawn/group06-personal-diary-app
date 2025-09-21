@@ -7,23 +7,33 @@ It allows users to register/login, add diary entries with a title and content, v
 
 ## ⚙️ Setup Instructions
 
-### 1. Clone the repository
+### 1. Install Python 3.12
+This project supports **Python 3.12**.  
+Download and install it from the official Python website:  
+👉 [Download Python 3.12](https://www.python.org/downloads/release/python-3120/)  
+
+Verify your Python version:
+```bash
+python --version
+```
+
+### 2. Clone the repository
 ```bash
 git clone https://github.com/t3ch-spawn/group06-personal-diary-app.git
 cd group06-personal-diary-app
 ```
 
-### 2. Install Pipenv (if not already installed)
+### 3. Install Pipenv (if not already installed)
 ```bash
 pip install pipenv
 ```
 
-### 3. Install dependencies
+### 4. Install dependencies
 ```bash
 pipenv install --dev
 ```
 
-### 4. Activate the virtual environment
+### 5. Activate the virtual environment
 ```bash
 pipenv shell
 ```
@@ -34,7 +44,7 @@ pipenv shell
 
 Run the Tkinter-based diary UI (main entry point):
 ```bash
-python diary_UI_updated.py
+python main.py
 ```
 
 ---
@@ -65,7 +75,7 @@ pytest tests/test_diary.py
 group06-personal-diary-app/
 │── diary.py               # Backend logic for diary operations
 │── storage.py             # Handles data storage in JSON
-│── diary_UI_updated.py    # Tkinter-based frontend (main entry point)
+│── main.py    # Tkinter-based frontend (main entry point)
 │── tests/                 # Unit tests for diary and storage
 │── Pipfile                # Dependency management
 │── Pipfile.lock           # Locked dependency versions
@@ -76,35 +86,37 @@ group06-personal-diary-app/
 ---
 
 ## 👥 Roles & Contributions
-- **Christopher(kristovpsy), segun(oluwasegun-dev) – Frontend (Tkinter UI)**  
+- **Christopher(kristovpsy), segun(oluwasegun-dev)[Developer - Frontend] – Frontend (Tkinter UI)**  
   Responsible for designing and implementing the user interface (`diary_UI_updated.py`), including input fields, login dialog boxes, calendar integration, search interface, view entries interface.  
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/592801b9840b2fc7ea8b4226f8b5bae68d0db157)
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/pull/4/commits/aeac3b7d1f36c45c7f466907a66a40670516b736)
 
-- **Fadilah(Fadilah1-hub) – Testing & Security**  
+- **Fadilah(Fadilah1-hub)[Pytests / Tests] – Testing & Security**  
   Developed the Pytest test cases for the diary and storage modules, and implemented the security module for user authentication.
  [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/6a8808727e23af3f09c17be74745b9baa72163c8)
   
 
-- **Peter(perryblaq26) – JSON Storage**  
+- **Peter(perryblaq26)[Developer: Core Logic] – JSON Storage**  
   Implemented the JSON-based storage functionality for persisting diary entries.  
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/1a4db48d94bc15c334d9e68a80b16f572e79ebc9)
 
-- **Idris(OBALOLALUMIERE01) – Entry Editing & Deletion**  
+- **Idris(OBALOLALUMIERE01)[Developer: Core Logic] – Entry Editing & Deletion**  
   Wrote the code for editing and deleting user diary entries.  
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/64992105f955091f32d44b2d994b3cbbdfa18b40)
 
-- **Kabir(kabirahmadmusa66-bot) – Regex Search**  
+- **Kabir(kabirahmadmusa66-bot)[Developer: Core Logic] – Regex Search**  
   Implemented keyword-based search functionality using regular expressions.  
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/b83e930d9a82873e3abca65d8f669c2f0db403bd)
 
-- **Muhammad(muhnasmmad-glitch) – Entry Creation**  
+- **Muhammad(muhnasmmad-glitch)[Developer: Core Logic] – Entry Creation**  
   Developed the functionality for creating new user diary entries.  
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/e72cc802692ea7de26bb88c888eef72166fef384)
 
-- **Bolu(t3ch-spawn) – Date Search & Codebase Integration**  
+- **Bolu(t3ch-spawn)[Team Lead, Docs, Presenter] – Date Search & Codebase Integration**  
   Implemented search by date functionality, and was responsible for merging, organizing, and refining code across features (creating, editing, deleting, and searching entries).  
-  Also enhanced the storage module and restructured the codebase to support multiple user flows.
+  Also enhanced the storage module and restructured the codebase to support multiple user flows.  
+  Scheduled and facilitated meetings, ensured code consistency across the team, aided in team communication, and oversaw the repository to maintain overall project quality.  
+  Additionally, set up the README documentation and served as the demo video presenter.
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/9e660a80715764abf6d1cf57145b029860ac2db1)
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/608a0d6dc8c61a2e8a2488c54220e00b90966b96)
   [See commit](https://github.com/t3ch-spawn/group06-personal-diary-app/commit/2ae15edf3594dc194873cf18d9b8baad3be43ca9)
