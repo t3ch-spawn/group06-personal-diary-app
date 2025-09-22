@@ -148,6 +148,11 @@ group06-personal-diary-app/
 
 ---
 
+## 🎥 Individual Reflections
+[Folder Link](https://drive.google.com/drive/folders/1BqUtOelN0y0mOz4LZ1da_AxvLHvhSiFc?usp=drive_link)
+
+---
+
 ## 📸 Screenshots
 ## 🔐 1. Login or Register
 
