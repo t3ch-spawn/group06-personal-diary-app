@@ -142,6 +142,12 @@ group06-personal-diary-app/
 
 ---
 
+
+## 🎥 Project Report
+[Report Link](https://drive.google.com/file/d/1r7_XlfHwAQ4toReWxcaItFWuaWO3oLfb/view?usp=drive_link)
+
+---
+
 ## 📸 Screenshots
 ## 🔐 1. Login or Register
 

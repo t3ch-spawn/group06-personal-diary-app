@@ -83,8 +83,8 @@ class Diary:
 
         results = []
 
-        day_pattern = re.compile(rf"\d\d\d\d-\d\d-{re.escape(search_param)}")      # search by month
-        month_pattern = re.compile(rf"\d\d\d\d-{re.escape(search_param)}-\d\d")    # search by day
+        day_pattern = re.compile(rf"\d\d\d\d-\d\d-{re.escape(search_param)}")      # search by day
+        month_pattern = re.compile(rf"\d\d\d\d-{re.escape(search_param)}-\d\d")    # search by month
         year_pattern = re.compile(rf"{re.escape(search_param)}-\d\d-\d\d")     #search by year
 
         for date_key, entry in user_entries.items():
